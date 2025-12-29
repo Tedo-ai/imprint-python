@@ -24,7 +24,7 @@ def set_current_span(span: Optional[Span]) -> None:
 
 
 class SpanContext:
-    """Context manager for setting current span."""
+    """Context manager for setting current span and finishing span on exit."""
 
     def __init__(self, span: Span):
         self.span = span
@@ -34,7 +34,17 @@ class SpanContext:
         self._token = _current_span.set(self.span)
         return self.span
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        # Record exception if one occurred
+        if exc_val:
+            self.span.record_error(exc_val)
+            if self.span.status_code == 0:
+                self.span.status_code = 500
+
+        # Finish the span
+        self.span.finish()
+
+        # Reset context
         if self._token:
             _current_span.reset(self._token)
 
