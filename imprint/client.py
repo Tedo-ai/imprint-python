@@ -48,6 +48,7 @@ class Client:
         trace_id: Optional[str] = None,
         parent_id: Optional[str] = None,
         attributes: Optional[Dict[str, Any]] = None,
+        start_time: Optional[int] = None,
     ) -> Tuple[SpanContext, Span]:
         """
         Start a new span.
@@ -59,6 +60,7 @@ class Client:
             trace_id: Explicit trace ID (for continuing a trace from headers)
             parent_id: Explicit parent span ID
             attributes: Initial attributes
+            start_time: Explicit start time in nanoseconds since epoch (for reconstructing spans)
 
         Returns:
             Tuple of (SpanContext for with statement, Span)
@@ -89,6 +91,7 @@ class Client:
             parent_id=parent_id,
             client=self,
             sampled=sampled,
+            start_time_ns=start_time,
         )
 
         if attributes:

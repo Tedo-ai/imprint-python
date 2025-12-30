@@ -38,6 +38,7 @@ class Span:
         parent_id: Optional[str] = None,
         client: Optional["Client"] = None,
         sampled: bool = True,
+        start_time_ns: Optional[int] = None,
     ):
         self.trace_id = trace_id
         self.span_id = span_id
@@ -46,8 +47,13 @@ class Span:
         self.name = name
         self.kind = kind  # "server", "client", "internal", "consumer", "event"
 
-        self.start_time = datetime.now(timezone.utc)
-        self._start_monotonic = time.perf_counter()
+        # Support explicit start time for reconstructing spans (e.g., from job metadata)
+        if start_time_ns is not None:
+            self.start_time = datetime.fromtimestamp(start_time_ns / 1_000_000_000, tz=timezone.utc)
+            self._start_monotonic = None  # No monotonic reference when using explicit time
+        else:
+            self.start_time = datetime.now(timezone.utc)
+            self._start_monotonic = time.perf_counter()
         self.duration_ns: Optional[int] = None
 
         self.status_code: int = 0
@@ -86,20 +92,37 @@ class Span:
                 self.attributes["imprint.sampling.promoted"] = "true"
         return self
 
-    def finish(self) -> None:
-        """End the span and queue it for sending."""
+    def finish(self, end_time_ns: Optional[int] = None) -> None:
+        """End the span and queue it for sending.
+
+        Args:
+            end_time_ns: Optional explicit end time in nanoseconds since epoch.
+                         If not provided, uses current time (via monotonic clock if available).
+        """
         with self._lock:
             if self._ended:
                 return
             self._ended = True
 
-            # Calculate duration using monotonic clock
-            elapsed = time.perf_counter() - self._start_monotonic
-            self.duration_ns = int(elapsed * 1_000_000_000)
+            if end_time_ns is not None:
+                # Explicit end time - calculate duration from start_time
+                start_ns = int(self.start_time.timestamp() * 1_000_000_000)
+                self.duration_ns = end_time_ns - start_ns
+            elif self._start_monotonic is not None:
+                # Calculate duration using monotonic clock (normal case)
+                elapsed = time.perf_counter() - self._start_monotonic
+                self.duration_ns = int(elapsed * 1_000_000_000)
+            else:
+                # Fallback: use wall clock (less accurate)
+                self.duration_ns = 0
 
         # Queue span for sending
         if self._client and (self._sampled or self._promoted):
             self._client._queue_span(self)
+
+    def end(self, end_time_ns: Optional[int] = None) -> None:
+        """Alias for finish() for more intuitive API."""
+        self.finish(end_time_ns=end_time_ns)
 
     def __enter__(self) -> "Span":
         return self
