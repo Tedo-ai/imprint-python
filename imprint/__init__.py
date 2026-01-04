@@ -29,6 +29,24 @@ from .context import (
 from .client import Client, get_client, init, shutdown
 from .sampler import AlwaysSampler, NeverSampler, RateSampler, Sampler, create_sampler
 from .span import Span, generate_span_id, generate_trace_id
+from .llm import (
+    LLMSpan,
+    MODEL_PRICING,
+    add_pricing,
+    calculate_cost,
+    get_provider,
+    # Attribute constants
+    ATTR_LLM_SYSTEM,
+    ATTR_LLM_MODEL,
+    ATTR_LLM_TOKENS_INPUT,
+    ATTR_LLM_TOKENS_OUTPUT,
+    ATTR_LLM_TOKENS_TOTAL,
+    ATTR_LLM_TOKENS_CACHED,
+    ATTR_LLM_TOKENS_REASONING,
+    ATTR_LLM_COST_USD,
+    ATTR_LLM_CACHE_HIT_RATE,
+    ATTR_LLM_CACHE_SAVINGS_USD,
+)
 
 __version__ = "0.1.0"
 
@@ -58,6 +76,22 @@ __all__ = [
     "NeverSampler",
     "RateSampler",
     "create_sampler",
+    # LLM
+    "LLMSpan",
+    "MODEL_PRICING",
+    "add_pricing",
+    "calculate_cost",
+    "get_provider",
+    "ATTR_LLM_SYSTEM",
+    "ATTR_LLM_MODEL",
+    "ATTR_LLM_TOKENS_INPUT",
+    "ATTR_LLM_TOKENS_OUTPUT",
+    "ATTR_LLM_TOKENS_TOTAL",
+    "ATTR_LLM_TOKENS_CACHED",
+    "ATTR_LLM_TOKENS_REASONING",
+    "ATTR_LLM_COST_USD",
+    "ATTR_LLM_CACHE_HIT_RATE",
+    "ATTR_LLM_CACHE_SAVINGS_USD",
 ]
 
 
