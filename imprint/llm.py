@@ -23,10 +23,15 @@ Usage:
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .span import Span
+
+
+# Pattern for date suffixes in model names (e.g., -2025-08-07 or -20241022)
+_DATE_SUFFIX_PATTERN = re.compile(r"-\d{4}-\d{2}-\d{2}$|-\d{8}$")
 
 
 # =============================================================================
@@ -197,8 +202,8 @@ def calculate_cost(
     """
     pricing = MODEL_PRICING.get(model)
     if not pricing:
-        # Try base model name (strip date suffix like -20241022)
-        base_model = model.rsplit("-", 1)[0] if "-" in model and model[-1].isdigit() else model
+        # Try base model name (strip date suffix like -2025-08-07 or -20241022)
+        base_model = _DATE_SUFFIX_PATTERN.sub("", model)
         pricing = MODEL_PRICING.get(base_model)
 
     if not pricing:

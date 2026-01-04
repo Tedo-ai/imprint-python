@@ -93,7 +93,13 @@ class ImprintTracingProcessor:
         imprint_span = self._span_map.pop(span.span_id, None)
         if imprint_span:
             if span.error:
-                imprint_span.record_error(message=span.error.message)
+                # Handle both object and dict error formats
+                if hasattr(span.error, 'message'):
+                    imprint_span.record_error(message=span.error.message)
+                elif isinstance(span.error, dict) and 'message' in span.error:
+                    imprint_span.record_error(message=span.error['message'])
+                else:
+                    imprint_span.record_error(message=str(span.error))
 
             # Extract LLM usage (token counts only available at end)
             self._record_llm_usage(span, imprint_span)
