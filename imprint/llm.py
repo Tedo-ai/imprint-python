@@ -70,15 +70,20 @@ ATTR_GEN_AI_USAGE_COST = "gen_ai.usage.cost"
 
 MODEL_PRICING: Dict[str, Dict[str, float]] = {
     # OpenAI GPT-5 series
+    "gpt-5": {
+        "input": 1.25,
+        "cached_input": 0.125,
+        "output": 10.00,
+    },
     "gpt-5-mini": {
         "input": 0.25,
         "cached_input": 0.025,
         "output": 2.00,
     },
-    "gpt-5": {
-        "input": 2.50,
-        "cached_input": 0.25,
-        "output": 10.00,
+    "gpt-5-nano": {
+        "input": 0.05,
+        "cached_input": 0.005,
+        "output": 0.40,
     },
     # OpenAI GPT-4.1 series
     "gpt-4.1": {
@@ -87,14 +92,14 @@ MODEL_PRICING: Dict[str, Dict[str, float]] = {
         "output": 8.00,
     },
     "gpt-4.1-mini": {
-        "input": 0.40,
-        "cached_input": 0.10,
-        "output": 1.60,
+        "input": 0.80,
+        "cached_input": 0.20,
+        "output": 3.20,
     },
     "gpt-4.1-nano": {
-        "input": 0.10,
-        "cached_input": 0.025,
-        "output": 0.40,
+        "input": 0.20,
+        "cached_input": 0.05,
+        "output": 0.80,
     },
     # OpenAI reasoning models
     "o3": {

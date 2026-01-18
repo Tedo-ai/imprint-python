@@ -262,14 +262,21 @@ class ImprintTracingProcessor:
             )
 
 
+_imprint_processor: Optional[ImprintTracingProcessor] = None
+
+
 def setup_tracing() -> ImprintTracingProcessor:
     """
     Enable Imprint tracing for OpenAI Agents SDK.
 
+    This function is idempotent - calling it multiple times will only
+    register one processor. This prevents span duplication when running
+    multiple agent sessions.
+
     Must call imprint.init() first.
 
     Returns:
-        The ImprintTracingProcessor instance.
+        The ImprintTracingProcessor instance (same instance on repeated calls).
 
     Example:
         import imprint
@@ -281,6 +288,12 @@ def setup_tracing() -> ImprintTracingProcessor:
         # Now run your agents
         result = await Runner.run(agent, "Hello!")
     """
+    global _imprint_processor
+
+    # Return existing processor if already set up (idempotent)
+    if _imprint_processor is not None:
+        return _imprint_processor
+
     try:
         from agents.tracing import add_trace_processor
     except ImportError:
@@ -291,6 +304,18 @@ def setup_tracing() -> ImprintTracingProcessor:
     if imprint.get_client() is None:
         raise RuntimeError("Imprint not initialized. Call imprint.init() first.")
 
-    processor = ImprintTracingProcessor()
-    add_trace_processor(processor)
-    return processor
+    _imprint_processor = ImprintTracingProcessor()
+    add_trace_processor(_imprint_processor)
+    return _imprint_processor
+
+
+def reset_tracing() -> None:
+    """
+    Reset the tracing state. Useful for testing or when reinitializing.
+
+    Note: This does NOT remove the processor from the OpenAI SDK's list,
+    it only clears our reference so setup_tracing() can be called again.
+    For full reset, restart the application.
+    """
+    global _imprint_processor
+    _imprint_processor = None
